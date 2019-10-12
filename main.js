@@ -153,6 +153,38 @@ function build_weights(N, order) {
     return weights;
 }
 
+function butterfly(buffer1, buffer2, h) {
+    // 蝴蝶算法的第1步:交換位置
+    set_element_order_per_column(buffer1, buffer2, h);
+    [buffer1, buffer2] = [buffer2, buffer1];
+
+    var N = h;
+    var n = Math.log2(N);
+    for (var order = 0; order < n - 1; ++order) {
+        add_or_minus(buffer1, buffer2, order, h);
+        [buffer1, buffer2] = [buffer2, buffer1];
+
+        var weights = build_weights(N, order + 1);
+        // console.log(weights);
+        multiply(weights, buffer1, buffer2, h);
+        [buffer1, buffer2] = [buffer2, buffer1];
+    }
+
+    add_or_minus(buffer1, buffer2, n - 1, h);
+    [buffer1, buffer2] = [buffer2, buffer1];
+
+    return [buffer1, buffer2];
+}
+
+function transpose(src, des, h) {
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y)
+            des[x][y].rewrite(src[y][x]);
+    }
+
+    return [des, src];
+}
+
 function test_add_or_minus() {
     var b1 = creat_buffer(8, 8);
     var b2 = creat_buffer(8, 8);
@@ -220,25 +252,13 @@ window.onload = () => {
     */
 
     // B=MX
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h);
 
-    // 蝴蝶算法的第1步:交換位置
-    set_element_order_per_column(buffer1, buffer2, w);
-    [buffer1, buffer2] = [buffer2, buffer1];
+    // (B)T
+    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
 
-    var N = h;
-    var n = Math.log2(N);
-    for (var order = 0; order < n - 1; ++order) {
-        add_or_minus(buffer1, buffer2, order, h);
-        [buffer1, buffer2] = [buffer2, buffer1];
-
-        var weights = build_weights(N, order + 1);
-        console.log(weights);
-        multiply(weights, buffer1, buffer2, h);
-        [buffer1, buffer2] = [buffer2, buffer1];
-    }
-
-    add_or_minus(buffer1, buffer2, n - 1, h);
-    [buffer1, buffer2] = [buffer2, buffer1];
+    // Y=M(B)T
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h);
 
     // var m = new Array(h).fill(new Complex(1.25, 0));
     // multiply(m, buffer1, buffer2, h);
@@ -248,7 +268,7 @@ window.onload = () => {
     // [buffer1, buffer2] = [buffer2, buffer1];
 
 
-    console.log(buffer1);
+    // console.log(buffer1);
     // console.log(buffer2);
 
 
@@ -256,10 +276,10 @@ window.onload = () => {
     for (var y = 0; y < h; ++y) {
         for (var x = 0; x < w; ++x) {
             var index = 4 * (x + y * w);
-            var value = buffer1[x][y].x;
-            canvas_data_array[index++] = value;
-            canvas_data_array[index++] = value;
-            canvas_data_array[index++] = value;
+            //顯示實數和虛數部
+            canvas_data_array[index++] = buffer1[x][y].x;
+            canvas_data_array[index++] = buffer1[x][y].y;
+            canvas_data_array[index++] = 0;
             canvas_data_array[index] = 255;
         }
     }
