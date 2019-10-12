@@ -47,7 +47,7 @@ function Complex(x, y) {
  * @param {*} N          \/  \/  N
  */
 function W(power, N) {
-    var theda = power * 2 * Math.PI / N;
+    var theda = power * -2 * Math.PI / N;
     return new Complex(Math.cos(theda), Math.sin(theda));
 }
 
@@ -132,7 +132,8 @@ function add_or_minus(src, des, x, h) {
  * @param {*} N 2^n= N
  * @param {*} order 1~(n-1)
  */
-function build_weights(N, order) {
+function build_weights(N, order, is_inverse) {
+    var sign = is_inverse ? -1 : 1;
 
     var n = Math.log2(N);
     var w_offset = Math.pow(2, n - 1 - order);
@@ -142,7 +143,7 @@ function build_weights(N, order) {
     var weights_subset = new Array(count).fill(new Complex(1, 0));// 複數的單位元是1+0i
 
     for (var i = 0; i < count; ++i) {
-        weights_subset.push(new W(i * w_offset, N));
+        weights_subset.push(new W(i * w_offset * sign, N));
         // weights_subset.push("W_" + i * w_offset + "_" + N);
     }
 
@@ -153,7 +154,7 @@ function build_weights(N, order) {
     return weights;
 }
 
-function butterfly(buffer1, buffer2, h) {
+function butterfly(buffer1, buffer2, h, is_inverse) {
     // 蝴蝶算法的第1步:交換位置
     set_element_order_per_column(buffer1, buffer2, h);
     [buffer1, buffer2] = [buffer2, buffer1];
@@ -164,7 +165,7 @@ function butterfly(buffer1, buffer2, h) {
         add_or_minus(buffer1, buffer2, order, h);
         [buffer1, buffer2] = [buffer2, buffer1];
 
-        var weights = build_weights(N, order + 1);
+        var weights = build_weights(N, order + 1, is_inverse);
         // console.log(weights);
         multiply(weights, buffer1, buffer2, h);
         [buffer1, buffer2] = [buffer2, buffer1];
@@ -251,14 +252,18 @@ window.onload = () => {
     Y=M(B)T
     */
 
-    // B=MX
-    [buffer1, buffer2] = butterfly(buffer1, buffer2, h);
-
-    // (B)T
+    // FFT
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, false);
     [buffer1, buffer2] = transpose(buffer1, buffer2, h);
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, false);
 
-    // Y=M(B)T
-    [buffer1, buffer2] = butterfly(buffer1, buffer2, h);
+    // IFFT
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
+    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
+    var m = new Array(h).fill(new Complex(1 / h / h, 0));
+    multiply(m, buffer1, buffer2, h);
+    [buffer1, buffer2] = [buffer2, buffer1];
 
     // var m = new Array(h).fill(new Complex(1.25, 0));
     // multiply(m, buffer1, buffer2, h);
@@ -278,8 +283,8 @@ window.onload = () => {
             var index = 4 * (x + y * w);
             //顯示實數和虛數部
             canvas_data_array[index++] = buffer1[x][y].x;
-            canvas_data_array[index++] = buffer1[x][y].y;
-            canvas_data_array[index++] = 0;
+            canvas_data_array[index++] = buffer1[x][y].x;
+            canvas_data_array[index++] = buffer1[x][y].x;
             canvas_data_array[index] = 255;
         }
     }
@@ -302,6 +307,6 @@ window.onload = () => {
     //     console.log(new W(i, N));
     // }
 
-    // var weights = build_weights(16, 1);
+    // var weights = build_weights(16, 1,false);
     // console.log(weights);
 };
