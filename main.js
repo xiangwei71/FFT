@@ -186,6 +186,16 @@ function transpose(src, des, h) {
     return [des, src];
 }
 
+function do_something(src, des, h) {
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y) {
+
+        }
+    }
+
+    return [des, src];
+}
+
 function test_add_or_minus() {
     var b1 = creat_buffer(8, 8);
     var b2 = creat_buffer(8, 8);
@@ -243,7 +253,7 @@ window.onload = () => {
         for (var x = 0; x < w; ++x) {
             var index = 4 * (x + y * w);
             var value = source_data_array[index];
-            buffer1[x][y].x = value;
+            buffer1[x][y].x = value / 255;
         }
     }
 
@@ -257,6 +267,9 @@ window.onload = () => {
     [buffer1, buffer2] = transpose(buffer1, buffer2, h);
     [buffer1, buffer2] = butterfly(buffer1, buffer2, h, false);
 
+    // do something
+    // [buffer1, buffer2] = do_something(buffer1, buffer2, h);
+
     // IFFT
     [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
     [buffer1, buffer2] = transpose(buffer1, buffer2, h);
@@ -265,15 +278,8 @@ window.onload = () => {
     multiply(m, buffer1, buffer2, h);
     [buffer1, buffer2] = [buffer2, buffer1];
 
-    // var m = new Array(h).fill(new Complex(1.25, 0));
-    // multiply(m, buffer1, buffer2, h);
-    // [buffer1, buffer2] = [buffer2, buffer1];
 
-    // add_or_minus(buffer1, buffer2, 0, h);
-    // [buffer1, buffer2] = [buffer2, buffer1];
-
-
-    // console.log(buffer1);
+    console.log(buffer1);
     // console.log(buffer2);
 
 
@@ -281,10 +287,10 @@ window.onload = () => {
     for (var y = 0; y < h; ++y) {
         for (var x = 0; x < w; ++x) {
             var index = 4 * (x + y * w);
-            //顯示實數和虛數部
-            canvas_data_array[index++] = buffer1[x][y].x;
-            canvas_data_array[index++] = buffer1[x][y].x;
-            canvas_data_array[index++] = buffer1[x][y].x;
+            var int_value = 255 * buffer1[x][y].x;
+            canvas_data_array[index++] = int_value;
+            canvas_data_array[index++] = int_value;
+            canvas_data_array[index++] = int_value;
             canvas_data_array[index] = 255;
         }
     }
