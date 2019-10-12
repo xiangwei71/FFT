@@ -67,19 +67,32 @@ function bit_reverse(value, bit_length) {
 }
 
 // 蝴蝶算法的第1步
-function set_element_order_per_column(src, des, n) {
-    var number = Math.pow(2, n);
-    for (var x = 0; x < number; ++x) {
-        for (var y = 0; y < number; ++y) {
+/**
+ * 
+ * @param {*} src 
+ * @param {*} des 
+ * @param {*} h row count
+ */
+function set_element_order_per_column(src, des, h) {
+    var n = Math.log2(h);
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y) {
             des[x][y] = src[x][bit_reverse(y, n)];
             //console.log(y, bit_reverse(y, n));
         }
     }
 }
 
-function multiply(weights, src, des, number) {
-    for (var x = 0; x < number; ++x) {
-        for (var y = 0; y < number; ++y) {
+/**
+ * 
+ * @param {*} weights 
+ * @param {*} src 
+ * @param {*} des 
+ * @param {*} h row count
+ */
+function multiply(weights, src, des, h) {
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y) {
             des[x][y] = weights[y] * src[x][y];
         }
     }
@@ -89,14 +102,14 @@ function multiply(weights, src, des, number) {
  * 
  * @param {*} src 
  * @param {*} des 
- * @param {*} x 2^n= width x < n
- * @param {*} number width 
+ * @param {*} x 2^n= h ,x < n
+ * @param {*} h 
  */
-function add_or_minus(src, des, x, number) {
+function add_or_minus(src, des, x, h) {
     var offset = Math.pow(2, x);
     console.log(offset);
-    for (var x = 0; x < number; ++x) {
-        for (var y = 0; y < number; ++y) {
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y) {
             if (Math.floor(y / offset) % 2 == 0)
                 des[x][y] = src[x][y] + src[x][y + offset];
             else
@@ -188,17 +201,15 @@ window.onload = () => {
         }
     }
 
-    var n = 9;
-    var number = Math.pow(2, n);
     // 蝴蝶算法的第1步:交換位置
-    // set_element_order_per_column(buffer1, buffer2, 9);
+    // set_element_order_per_column(buffer1, buffer2, w);
     // [buffer1, buffer2] = [buffer2, buffer1];
 
-    var m = new Array(512).fill(1.25);
-    // multiply(m, buffer1, buffer2, number);
+    var m = new Array(h).fill(1.25);
+    // multiply(m, buffer1, buffer2, h);
     // [buffer1, buffer2] = [buffer2, buffer1];
 
-    add_or_minus(buffer1, buffer2, 0, number);
+    add_or_minus(buffer1, buffer2, 0, h);
     [buffer1, buffer2] = [buffer2, buffer1];
 
 
@@ -220,6 +231,7 @@ window.onload = () => {
     draw_ctx.putImageData(canvas_data, 0, 0);
     console.log("finish");
 
+    // test add_or_minus()
     // test_add_or_minus();
 
     // test code
