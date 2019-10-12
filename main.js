@@ -16,20 +16,28 @@ function Complex(x, y) {
     this.x = x; // real
     this.y = y; // image
 
-    this.add = function (c) {
-        this.x = this.x + c.x;
-        this.y = this.y + c.y;
-        return this;
+    this.add = function (c, result) {
+        result.x = this.x + c.x;
+        result.y = this.y + c.y;
     }
 
-    this.multiply = function (c) {
+    this.minus = function (c, result) {
+        result.x = this.x - c.x;
+        result.y = this.y - c.y;
+    }
+
+    this.multiply = function (c, result) {
         var x = this.x;
         var y = this.y;
         var a = c.x;
         var b = c.y;
-        this.x = a * x - b * y;
-        this.y = a * y + b * x;
-        return this;
+        result.x = a * x - b * y;
+        result.y = a * y + b * x;
+    }
+
+    this.rewrite = function (c) {
+        this.x = c.x;
+        this.y = c.y;
     }
 }
 
@@ -77,7 +85,8 @@ function set_element_order_per_column(src, des, h) {
     var n = Math.log2(h);
     for (var x = 0; x < h; ++x) {
         for (var y = 0; y < h; ++y) {
-            des[x][y] = src[x][bit_reverse(y, n)];
+            var c = src[x][bit_reverse(y, n)];
+            des[x][y].rewrite(c);
             //console.log(y, bit_reverse(y, n));
         }
     }
@@ -93,7 +102,7 @@ function set_element_order_per_column(src, des, h) {
 function multiply(weights, src, des, h) {
     for (var x = 0; x < h; ++x) {
         for (var y = 0; y < h; ++y) {
-            des[x][y] = weights[y] * src[x][y];
+            src[x][y].multiply(weights[y], des[x][y]);
         }
     }
 }
@@ -111,9 +120,9 @@ function add_or_minus(src, des, x, h) {
     for (var x = 0; x < h; ++x) {
         for (var y = 0; y < h; ++y) {
             if (Math.floor(y / offset) % 2 == 0)
-                des[x][y] = src[x][y] + src[x][y + offset];
+                src[x][y].add(src[x][y + offset], des[x][y]);
             else
-                des[x][y] = src[x][y - offset] - src[x][y];
+                src[x][y - offset].minus(src[x][y], des[x][y]);
         }
     }
 }
@@ -145,20 +154,28 @@ function build_weights(N, order) {
 }
 
 function test_add_or_minus() {
-    var b1 = new Array(8);
-    for (var x = 0; x < 8; ++x) {
-        b1[x] = new Array(8);
-        for (var y = 0; y < 8; ++y)
-            b1[x][y] = y;
-    }
-    var b2 = new Array(8);
-    for (var x = 0; x < 8; ++x)
-        b2[x] = new Array(8).fill(0);
+    var b1 = creat_buffer(8, 8);
+    var b2 = creat_buffer(8, 8);
 
+    for (var x = 0; x < 8; ++x) {
+        for (var y = 0; y < 8; ++y)
+            b1[x][y] = new Complex(y, y);
+    }
 
     add_or_minus(b1, b2, 0, 8);
     console.log(b1);
     console.log(b2);
+}
+
+function creat_buffer(w, h) {
+    var buffer = new Array(w);
+    for (var x = 0; x < w; ++x) {
+        buffer[x] = new Array(h);
+
+        for (var y = 0; y < h; ++y)
+            buffer[x][y] = new Complex(0, 0);
+    }
+    return buffer;
 }
 
 window.onload = () => {
@@ -184,12 +201,8 @@ window.onload = () => {
     var canvas_data_array = canvas_data.data;
 
     // init buffer
-    var buffer1 = new Array(w);
-    for (var x = 0; x < h; ++x)
-        buffer1[x] = new Array(h).fill(0);
-    var buffer2 = new Array(w);
-    for (var x = 0; x < h; ++x)
-        buffer2[x] = new Array(h).fill(0);
+    var buffer1 = creat_buffer(w, h);
+    var buffer2 = creat_buffer(w, h);
 
     // https://stackoverflow.com/questions/46863683/speed-up-canvass-getimagedata
     // copy from source to buffer1
@@ -197,7 +210,7 @@ window.onload = () => {
         for (var x = 0; x < w; ++x) {
             var index = 4 * (x + y * w);
             var value = source_data_array[index];
-            buffer1[x][y] = value;
+            buffer1[x][y].x = value;
         }
     }
 
@@ -205,7 +218,7 @@ window.onload = () => {
     // set_element_order_per_column(buffer1, buffer2, w);
     // [buffer1, buffer2] = [buffer2, buffer1];
 
-    var m = new Array(h).fill(1.25);
+    var m = new Array(h).fill(new Complex(1.25, 0));
     // multiply(m, buffer1, buffer2, h);
     // [buffer1, buffer2] = [buffer2, buffer1];
 
@@ -221,7 +234,7 @@ window.onload = () => {
     for (var y = 0; y < h; ++y) {
         for (var x = 0; x < w; ++x) {
             var index = 4 * (x + y * w);
-            var value = buffer1[x][y];
+            var value = buffer1[x][y].x;
             canvas_data_array[index++] = value;
             canvas_data_array[index++] = value;
             canvas_data_array[index++] = value;
@@ -237,7 +250,9 @@ window.onload = () => {
     // test code
     // var c = new Complex(1, 2);
     // var c2 = new Complex(2, 4);
-    // console.log(c.multiply(c2));
+    // var c3 = new Complex(0, 0);
+    // c.multiply(c2, c3);
+    // console.log(c3);
 
     // test W
     // var N = 16;
