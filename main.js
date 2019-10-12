@@ -139,7 +139,7 @@ function build_weights(N, order) {
     var repeat = w_offset;
 
     var count = Math.pow(2, order);
-    var weights_subset = new Array(count).fill(1);
+    var weights_subset = new Array(count).fill(new Complex(1, 0));// 複數的單位元是1+0i
 
     for (var i = 0; i < count; ++i) {
         weights_subset.push(new W(i * w_offset, N));
@@ -214,11 +214,33 @@ window.onload = () => {
         }
     }
 
-    // 蝴蝶算法的第1步:交換位置
-    // set_element_order_per_column(buffer1, buffer2, w);
-    // [buffer1, buffer2] = [buffer2, buffer1];
+    /*二維DFT可以分解成 2次一維DFT
+    B=MX
+    Y=M(B)T
+    */
 
-    var m = new Array(h).fill(new Complex(1.25, 0));
+    // B=MX
+
+    // 蝴蝶算法的第1步:交換位置
+    set_element_order_per_column(buffer1, buffer2, w);
+    [buffer1, buffer2] = [buffer2, buffer1];
+
+    var N = h;
+    var n = Math.log2(N);
+    for (var order = 0; order < n - 1; ++order) {
+        add_or_minus(buffer1, buffer2, order, h);
+        [buffer1, buffer2] = [buffer2, buffer1];
+
+        var weights = build_weights(N, order + 1);
+        console.log(weights);
+        multiply(weights, buffer1, buffer2, h);
+        [buffer1, buffer2] = [buffer2, buffer1];
+    }
+
+    add_or_minus(buffer1, buffer2, n - 1, h);
+    [buffer1, buffer2] = [buffer2, buffer1];
+
+    // var m = new Array(h).fill(new Complex(1.25, 0));
     // multiply(m, buffer1, buffer2, h);
     // [buffer1, buffer2] = [buffer2, buffer1];
 
@@ -226,7 +248,7 @@ window.onload = () => {
     // [buffer1, buffer2] = [buffer2, buffer1];
 
 
-    // console.log(buffer1);
+    console.log(buffer1);
     // console.log(buffer2);
 
 
