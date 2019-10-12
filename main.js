@@ -16,17 +16,17 @@ function Complex(x, y) {
     this.x = x; // real
     this.y = y; // image
 
-    this.add = function (c, result) {
+    this.add = (c, result) => {
         result.x = this.x + c.x;
         result.y = this.y + c.y;
     }
 
-    this.minus = function (c, result) {
+    this.minus = (c, result) => {
         result.x = this.x - c.x;
         result.y = this.y - c.y;
     }
 
-    this.multiply = function (c, result) {
+    this.multiply = (c, result) => {
         var x = this.x;
         var y = this.y;
         var a = c.x;
@@ -35,7 +35,7 @@ function Complex(x, y) {
         result.y = a * y + b * x;
     }
 
-    this.rewrite = function (c) {
+    this.rewrite = (c) => {
         this.x = c.x;
         this.y = c.y;
     }
@@ -222,8 +222,8 @@ window.onload = () => {
     // multiply(m, buffer1, buffer2, h);
     // [buffer1, buffer2] = [buffer2, buffer1];
 
-    add_or_minus(buffer1, buffer2, 0, h);
-    [buffer1, buffer2] = [buffer2, buffer1];
+    // add_or_minus(buffer1, buffer2, 0, h);
+    // [buffer1, buffer2] = [buffer2, buffer1];
 
 
     // console.log(buffer1);
