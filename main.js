@@ -12,6 +12,37 @@
 // 二維FFT to 2個一維FFT
 // https://zhuanlan.zhihu.com/p/36377799?fbclid=IwAR3NN4Bjy3aZtE1d8VANJM0gown7Cc_XQPH6SxrlZkjmXV4cZsWNErwOdq0
 
+function Complex(x, y) {
+    this.x = x; // real
+    this.y = y; // image
+
+    this.add = function (c) {
+        this.x = this.x + c.x;
+        this.y = this.y + c.y;
+        return this;
+    }
+
+    this.multiply = function (c) {
+        var x = this.x;
+        var y = this.y;
+        var a = c.x;
+        var b = c.y;
+        this.x = a * x - b * y;
+        this.y = a * y + b * x;
+        return this;
+    }
+}
+
+/**
+ *                               power
+ * @param {*} power     \  /\  /
+ * @param {*} N          \/  \/  N
+ */
+function W(power, N) {
+    var theda = power * 2 * Math.PI / N;
+    return new Complex(Math.cos(theda), Math.sin(theda));
+}
+
 
 function str_reverse(str) {
     return str.split("").reverse().join("");
@@ -46,14 +77,21 @@ function set_element_order_per_column(src, des, n) {
     }
 }
 
-function multiply(m_factor, src, des, number) {
+function multiply(weights, src, des, number) {
     for (var x = 0; x < number; ++x) {
         for (var y = 0; y < number; ++y) {
-            des[x][y] = m_factor[y] * src[x][y];
+            des[x][y] = weights[y] * src[x][y];
         }
     }
 }
 
+/**
+ * 
+ * @param {*} src 
+ * @param {*} des 
+ * @param {*} x 2^n= width x < n
+ * @param {*} number width 
+ */
 function add_or_minus(src, des, x, number) {
     var offset = Math.pow(2, x);
     console.log(offset);
@@ -65,6 +103,32 @@ function add_or_minus(src, des, x, number) {
                 des[x][y] = src[x][y - offset] - src[x][y];
         }
     }
+}
+
+/**
+ * 
+ * @param {*} N 2^n= N
+ * @param {*} order 1~(n-1)
+ */
+function build_weights(N, order) {
+
+    var n = Math.log2(N);
+    var w_offset = Math.pow(2, n - 1 - order);
+    var repeat = w_offset;
+
+    var count = Math.pow(2, order);
+    var weights_subset = new Array(count).fill(1);
+
+    for (var i = 0; i < count; ++i) {
+        weights_subset.push(new W(i * w_offset, N));
+        // weights_subset.push("W_" + i * w_offset + "_" + N);
+    }
+
+    var weights = new Array();
+    for (var i = 0; i < repeat; ++i)
+        weights = weights.concat(weights_subset);
+
+    return weights;
 }
 
 function test_add_or_minus() {
@@ -156,6 +220,19 @@ window.onload = () => {
     draw_ctx.putImageData(canvas_data, 0, 0);
     console.log("finish");
 
-    test_add_or_minus();
+    // test_add_or_minus();
 
+    // test code
+    // var c = new Complex(1, 2);
+    // var c2 = new Complex(2, 4);
+    // console.log(c.multiply(c2));
+
+    // test W
+    // var N = 16;
+    // for (var i = 0; i < N + 1; ++i) {
+    //     console.log(new W(i, N));
+    // }
+
+    // var weights = build_weights(16, 1);
+    // console.log(weights);
 };
