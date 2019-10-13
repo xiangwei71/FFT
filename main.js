@@ -116,7 +116,7 @@ function multiply(weights, src, des, h) {
  */
 function add_or_minus(src, des, x, h) {
     var offset = Math.pow(2, x);
-    console.log(offset);
+    // console.log(offset);
     for (var x = 0; x < h; ++x) {
         for (var y = 0; y < h; ++y) {
             if (Math.floor(y / offset) % 2 == 0)
@@ -252,8 +252,9 @@ window.onload = () => {
     for (var y = 0; y < h; ++y) {
         for (var x = 0; x < w; ++x) {
             var index = 4 * (x + y * w);
-            var value = source_data_array[index];
-            buffer1[x][y].x = value / 255;
+            var int_value = source_data_array[index];
+            var f_value = int_value / 255; // to 0~1
+            buffer1[x][y].x = Math.pow(f_value, 2.2); // de gamma
         }
     }
 
@@ -287,7 +288,9 @@ window.onload = () => {
     for (var y = 0; y < h; ++y) {
         for (var x = 0; x < w; ++x) {
             var index = 4 * (x + y * w);
-            var int_value = 255 * buffer1[x][y].x;
+            var f_value = Math.pow(buffer1[x][y].x, 1 / 2.2);
+            var int_value = Math.round(255 * f_value); // to 0~255
+
             canvas_data_array[index++] = int_value;
             canvas_data_array[index++] = int_value;
             canvas_data_array[index++] = int_value;
