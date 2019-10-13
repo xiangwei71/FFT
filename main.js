@@ -244,10 +244,17 @@ function remap(src, des, h, min, max) {
     return [des, src];
 }
 
-function do_something(src, des, h) {
+function clear_center(src, des, h) {
+    var center = h / 2 - 0.5;
     for (var x = 0; x < h; ++x) {
         for (var y = 0; y < h; ++y) {
-
+            var len = Math.sqrt(Math.pow(x - center, 2) + Math.pow(y - center, 2));
+            if (len < 20) {
+                des[x][y].x = 0;
+                des[x][y].y = 0;
+            } else {
+                des[x][y].rewrite(src[x][y]);
+            }
         }
     }
 
@@ -288,6 +295,30 @@ function pow(src, des, h, power) {
     }
 
     return [des, src];
+}
+
+function FFT(buffer1, buffer2, h) {
+    /*二維DFT可以分解成 2次一維DFT
+    B=MX
+    Y=M(B)T
+    */
+
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, false);
+    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, false);
+
+    return [buffer1, buffer2];
+}
+
+function IFFT(buffer1, buffer2, h) {
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
+    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
+    var m = new Array(h).fill(new Complex(1 / h / h, 0));
+    multiply(m, buffer1, buffer2, h);
+    [buffer1, buffer2] = [buffer2, buffer1];
+
+    return [buffer1, buffer2];
 }
 
 //
@@ -352,27 +383,17 @@ window.onload = () => {
     // de gamma
     [buffer1, buffer2] = pow(buffer1, buffer2, h, 2.2);
 
-    /*二維DFT可以分解成 2次一維DFT
-    B=MX
-    Y=M(B)T
-    */
-
     // FFT
-    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, false);
-    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
-    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, false);
+    [buffer1, buffer2] = FFT(buffer1, buffer2, h);
 
+    [buffer1, buffer2] = shift(buffer1, buffer2, h);
+    [buffer1, buffer2] = clear_center(buffer1, buffer2, h);
     [buffer1, buffer2] = shift(buffer1, buffer2, h);
 
     // [buffer1, buffer2] = visualize(buffer1, buffer2, h);
 
     // IFFT
-    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
-    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
-    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
-    var m = new Array(h).fill(new Complex(1 / h / h, 0));
-    multiply(m, buffer1, buffer2, h);
-    [buffer1, buffer2] = [buffer2, buffer1];
+    [buffer1, buffer2] = IFFT(buffer1, buffer2, h);
 
     // gamma
     [buffer1, buffer2] = pow(buffer1, buffer2, h, 1 / 2.2);
