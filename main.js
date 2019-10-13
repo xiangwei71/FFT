@@ -203,11 +203,10 @@ function shift(src, des, h) {
 function log(src, des, h) {
     for (var x = 0; x < h; ++x) {
         for (var y = 0; y < h; ++y) {
-            // des[x][y].x = Math.log2(Math.abs(src[x][y].x));
-            // des[x][y].y = Math.log2(Math.abs(src[x][y].y));
             var len = src[x][y].length();
-            des[x][y].x = Math.log2(len);
-            des[x][y].y = Math.log2(len);
+            var log_value = Math.log2(1 + len); // 這樣就不會出現-infinite
+            des[x][y].x = log_value;
+            des[x][y].y = log_value;
         }
     }
 
@@ -343,11 +342,7 @@ function visualize(buffer1, buffer2, h) {
 
     [buffer1, buffer2] = remap(buffer1, buffer2, h, min, max);
 
-    // min = get_min(buffer1, h);
-    // max = get_max(buffer1, h);
-    // console.log(min, max);
-
-    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
+    // [buffer1, buffer2] = transpose(buffer1, buffer2, h);
 
     //brightness
     [buffer1, buffer2] = pow(buffer1, buffer2, h, 2.2);
