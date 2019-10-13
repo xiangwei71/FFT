@@ -341,11 +341,10 @@ function visualize(buffer1, buffer2, h) {
     // console.log(min, max);
 
     [buffer1, buffer2] = remap(buffer1, buffer2, h, min, max);
-
-    // [buffer1, buffer2] = transpose(buffer1, buffer2, h);
+    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
 
     //brightness
-    [buffer1, buffer2] = pow(buffer1, buffer2, h, 2.2);
+    // [buffer1, buffer2] = pow(buffer1, buffer2, h, 2.2);
 
     return [buffer1, buffer2];
 }
@@ -387,8 +386,8 @@ window.onload = () => {
         }
     }
 
-    // de gamma
-    [buffer1, buffer2] = pow(buffer1, buffer2, h, 2.2);
+    // remove gamma
+    // [buffer1, buffer2] = pow(buffer1, buffer2, h, 2.2);
 
     // FFT
     [buffer1, buffer2] = FFT(buffer1, buffer2, h);
@@ -403,7 +402,7 @@ window.onload = () => {
     // [buffer1, buffer2] = IFFT(buffer1, buffer2, h);
 
     // gamma
-    [buffer1, buffer2] = pow(buffer1, buffer2, h, 1 / 2.2);
+    // [buffer1, buffer2] = pow(buffer1, buffer2, h, 1 / 2.2);
 
     console.log(buffer1);
     // console.log(buffer2);
