@@ -39,6 +39,10 @@ function Complex(x, y) {
         this.x = c.x;
         this.y = c.y;
     }
+
+    this.length = (c) => {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
 }
 
 /**
@@ -199,8 +203,11 @@ function shift(src, des, h) {
 function log(src, des, h) {
     for (var x = 0; x < h; ++x) {
         for (var y = 0; y < h; ++y) {
-            des[x][y].x = Math.log2(Math.abs(src[x][y].x));
-            des[x][y].y = Math.log2(Math.abs(src[x][y].y));
+            // des[x][y].x = Math.log2(Math.abs(src[x][y].x));
+            // des[x][y].y = Math.log2(Math.abs(src[x][y].y));
+            var len = src[x][y].length();
+            des[x][y].x = Math.log2(len);
+            des[x][y].y = Math.log2(len);
         }
     }
 
@@ -245,11 +252,16 @@ function remap(src, des, h, min, max) {
 }
 
 function clear_center(src, des, h) {
+
+    var min = get_min(src, h);
+    var max = get_max(src, h);
+    console.log(min, max);
+
     var center = h / 2 - 0.5;
     for (var x = 0; x < h; ++x) {
         for (var y = 0; y < h; ++y) {
             var len = Math.sqrt(Math.pow(x - center, 2) + Math.pow(y - center, 2));
-            if (len < 20) {
+            if (len < 6) {
                 des[x][y].x = 0;
                 des[x][y].y = 0;
             } else {
@@ -338,7 +350,7 @@ function visualize(buffer1, buffer2, h) {
     [buffer1, buffer2] = transpose(buffer1, buffer2, h);
 
     //brightness
-    [buffer1, buffer2] = pow(buffer1, buffer2, h, 1.2);
+    [buffer1, buffer2] = pow(buffer1, buffer2, h, 2.2);
 
     return [buffer1, buffer2];
 }
@@ -387,13 +399,13 @@ window.onload = () => {
     [buffer1, buffer2] = FFT(buffer1, buffer2, h);
 
     [buffer1, buffer2] = shift(buffer1, buffer2, h);
-    [buffer1, buffer2] = clear_center(buffer1, buffer2, h);
-    [buffer1, buffer2] = shift(buffer1, buffer2, h);
+    // [buffer1, buffer2] = clear_center(buffer1, buffer2, h);
+    // [buffer1, buffer2] = shift(buffer1, buffer2, h);
 
-    // [buffer1, buffer2] = visualize(buffer1, buffer2, h);
+    [buffer1, buffer2] = visualize(buffer1, buffer2, h);
 
     // IFFT
-    [buffer1, buffer2] = IFFT(buffer1, buffer2, h);
+    // [buffer1, buffer2] = IFFT(buffer1, buffer2, h);
 
     // gamma
     [buffer1, buffer2] = pow(buffer1, buffer2, h, 1 / 2.2);
