@@ -186,6 +186,64 @@ function transpose(src, des, h) {
     return [des, src];
 }
 
+function shift(src, des, h) {
+    var offset = h / 2;
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y)
+            des[x][y].rewrite(src[(x + offset) % h][(y + offset) % h]);
+    }
+
+    return [des, src];
+}
+
+function log(src, des, h) {
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y) {
+            des[x][y].x = Math.log2(Math.abs(src[x][y].x));
+            des[x][y].y = Math.log2(Math.abs(src[x][y].y));
+        }
+    }
+
+    return [des, src];
+}
+
+function get_min(src, h) {
+    var min_x = Number.MAX_VALUE;
+    var min_y = Number.MAX_VALUE;
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y) {
+            min_x = Math.min(src[x][y].x, min_x);
+            min_y = Math.min(src[x][y].y, min_y);
+        }
+    }
+    return [min_x, min_y];
+}
+
+function get_max(src, h) {
+    var max_x = Number.MIN_VALUE;
+    var max_y = Number.MIN_VALUE;
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y) {
+            max_x = Math.max(src[x][y].x, max_x);
+            max_y = Math.max(src[x][y].y, max_y);
+        }
+    }
+    return [max_x, max_y];
+}
+
+function remap(src, des, h, min, max) {
+    var range_x = max[0] - min[0];
+    var range_y = max[1] - min[1];
+
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y) {
+            des[x][y].x = (src[x][y].x - min[0]) / range_x;
+            des[x][y].y = (src[x][y].y - min[1]) / range_y;
+        }
+    }
+    return [des, src];
+}
+
 function do_something(src, des, h) {
     for (var x = 0; x < h; ++x) {
         for (var y = 0; y < h; ++y) {
@@ -221,6 +279,34 @@ function creat_buffer(w, h) {
     return buffer;
 }
 
+function pow(src, des, h, power) {
+    for (var x = 0; x < h; ++x) {
+        for (var y = 0; y < h; ++y) {
+            des[x][y].x = Math.pow(src[x][y].x, power);
+            des[x][y].y = Math.pow(src[x][y].y, power);
+        }
+    }
+
+    return [des, src];
+}
+
+//
+function visualize(buffer1, buffer2, h) {
+
+    [buffer1, buffer2] = log(buffer1, buffer2, h);
+    var min = get_min(buffer1, h);
+    var max = get_max(buffer1, h);
+    console.log(min, max);
+
+    [buffer1, buffer2] = remap(buffer1, buffer2, h, min, max);
+
+    // min = get_min(buffer1, h);
+    // max = get_max(buffer1, h);
+    // console.log(min, max);
+
+    return [buffer1, buffer2];
+}
+
 window.onload = () => {
     var img = document.getElementsByTagName("img")[0];
     var w = img.width;
@@ -254,9 +340,12 @@ window.onload = () => {
             var index = 4 * (x + y * w);
             var int_value = source_data_array[index];
             var f_value = int_value / 255; // to 0~1
-            buffer1[x][y].x = Math.pow(f_value, 2.2); // de gamma
+            buffer1[x][y].x = f_value;
         }
     }
+
+    // de gamma
+    [buffer1, buffer2] = pow(buffer1, buffer2, h, 2.2);
 
     /*二維DFT可以分解成 2次一維DFT
     B=MX
@@ -268,17 +357,25 @@ window.onload = () => {
     [buffer1, buffer2] = transpose(buffer1, buffer2, h);
     [buffer1, buffer2] = butterfly(buffer1, buffer2, h, false);
 
+    [buffer1, buffer2] = shift(buffer1, buffer2, h);
+
+    [buffer1, buffer2] = visualize(buffer1, buffer2, h);
+
+    // [buffer1, buffer2] = remap(buffer1, buffer2, h, min, max);
+
     // do something
     // [buffer1, buffer2] = do_something(buffer1, buffer2, h);
 
     // IFFT
-    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
-    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
-    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
-    var m = new Array(h).fill(new Complex(1 / h / h, 0));
-    multiply(m, buffer1, buffer2, h);
-    [buffer1, buffer2] = [buffer2, buffer1];
+    // [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
+    // [buffer1, buffer2] = transpose(buffer1, buffer2, h);
+    // [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
+    // var m = new Array(h).fill(new Complex(1 / h / h, 0));
+    // multiply(m, buffer1, buffer2, h);
+    // [buffer1, buffer2] = [buffer2, buffer1];
 
+    // gamma
+    // [buffer1, buffer2] = pow(buffer1, buffer2, h, 1 / 2.2);
 
     console.log(buffer1);
     // console.log(buffer2);
@@ -288,7 +385,8 @@ window.onload = () => {
     for (var y = 0; y < h; ++y) {
         for (var x = 0; x < w; ++x) {
             var index = 4 * (x + y * w);
-            var f_value = Math.pow(buffer1[x][y].x, 1 / 2.2);
+
+            var f_value = buffer1[x][y].x;
             var int_value = Math.round(255 * f_value); // to 0~255
 
             canvas_data_array[index++] = int_value;
