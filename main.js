@@ -296,13 +296,18 @@ function visualize(buffer1, buffer2, h) {
     [buffer1, buffer2] = log(buffer1, buffer2, h);
     var min = get_min(buffer1, h);
     var max = get_max(buffer1, h);
-    console.log(min, max);
+    // console.log(min, max);
 
     [buffer1, buffer2] = remap(buffer1, buffer2, h, min, max);
 
     // min = get_min(buffer1, h);
     // max = get_max(buffer1, h);
     // console.log(min, max);
+
+    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
+
+    //brightness
+    [buffer1, buffer2] = pow(buffer1, buffer2, h, 1.2);
 
     return [buffer1, buffer2];
 }
@@ -359,23 +364,18 @@ window.onload = () => {
 
     [buffer1, buffer2] = shift(buffer1, buffer2, h);
 
-    [buffer1, buffer2] = visualize(buffer1, buffer2, h);
-
-    // [buffer1, buffer2] = remap(buffer1, buffer2, h, min, max);
-
-    // do something
-    // [buffer1, buffer2] = do_something(buffer1, buffer2, h);
+    // [buffer1, buffer2] = visualize(buffer1, buffer2, h);
 
     // IFFT
-    // [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
-    // [buffer1, buffer2] = transpose(buffer1, buffer2, h);
-    // [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
-    // var m = new Array(h).fill(new Complex(1 / h / h, 0));
-    // multiply(m, buffer1, buffer2, h);
-    // [buffer1, buffer2] = [buffer2, buffer1];
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
+    [buffer1, buffer2] = transpose(buffer1, buffer2, h);
+    [buffer1, buffer2] = butterfly(buffer1, buffer2, h, true);
+    var m = new Array(h).fill(new Complex(1 / h / h, 0));
+    multiply(m, buffer1, buffer2, h);
+    [buffer1, buffer2] = [buffer2, buffer1];
 
     // gamma
-    // [buffer1, buffer2] = pow(buffer1, buffer2, h, 1 / 2.2);
+    [buffer1, buffer2] = pow(buffer1, buffer2, h, 1 / 2.2);
 
     console.log(buffer1);
     // console.log(buffer2);
