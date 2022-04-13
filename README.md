@@ -6,6 +6,9 @@ play FFT
 ## DFT
 [原文](https://blog.csdn.net/sac761/article/details/76525188?fbclid=IwAR3S5ForwXvr3N2Cb44iRz6naGqq1KiwM2GXCBMd4kDqLaG3ej3hGKm-H6I)  
 
+## Shift
+[原文](https://blog.csdn.net/haoaoweitt/article/details/83012477)
+
 ## FFT原理
 [原文](https://ccjou.wordpress.com/2012/05/25/%E5%BF%AB%E9%80%9F%E5%82%85%E7%AB%8B%E8%91%89%E8%BD%89%E6%8F%9B/?fbclid=IwAR0cKxfMMt9AZYsKBqt60Ko1ojiO5_jnoqW1Tqt8TIl3U1N3NBzGK4-tpe0)  
 
