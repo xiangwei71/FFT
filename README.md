@@ -46,7 +46,7 @@ function butterfly(buffer1, buffer2, h, is_inverse) {
 function FFT(buffer1, buffer2, h) {
     /*二維DFT可以分解成 2次一維DFT
     B=MX
-    Y=M(B)T
+    Y=M Transpose(B)
     */
 
     [buffer1, buffer2] = butterfly(buffer1, buffer2, h, false);
