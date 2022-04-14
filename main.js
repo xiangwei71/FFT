@@ -40,7 +40,7 @@ function Complex(x, y) {
         this.y = c.y;
     }
 
-    this.length = (c) => {
+    this.length = () => {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 }
